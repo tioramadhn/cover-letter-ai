@@ -1,8 +1,7 @@
 import { z } from "zod";
 
 export const formSchema = z.object({
-  fileCV: z
-    .instanceof(FileList)
+  fileCV: (typeof window == undefined ? z.any() : z.instanceof(FileList))
     .refine((files) => files && files?.length > 0, {
       message: "Please upload your CV.",
     })
@@ -19,8 +18,10 @@ export const formSchema = z.object({
         )
     ),
   jobDetailsType: z.string(),
-  jobDetailsFile: z
-    .instanceof(FileList)
+  jobDetailsFile: (typeof window == undefined
+    ? z.any()
+    : z.instanceof(FileList)
+  )
     .refine((files) => files && files?.length > 0, {
       message: "Please upload your Job Details.",
     })
