@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 export const formSchema = z.object({
-  fileCV: (typeof window == undefined ? z.any() : z.instanceof(FileList))
+  fileCV: z
+    .unknown()
+    .transform((value) => {
+      return value as FileList;
+    })
     .refine((files) => files && files?.length > 0, {
       message: "Please upload your CV.",
     })
@@ -18,10 +22,11 @@ export const formSchema = z.object({
         )
     ),
   jobDetailsType: z.string(),
-  jobDetailsFile: (typeof window == undefined
-    ? z.any()
-    : z.instanceof(FileList)
-  )
+  jobDetailsFile: z
+    .unknown()
+    .transform((value) => {
+      return value as FileList;
+    })
     .refine((files) => files && files?.length > 0, {
       message: "Please upload your Job Details.",
     })
