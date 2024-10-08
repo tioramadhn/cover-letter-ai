@@ -42,7 +42,7 @@ export const CoverLetterForm = () => {
         <FormField
           control={form.control}
           name="fileCV"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <FormLabel>CV / Resume</FormLabel>
               <FormControl>

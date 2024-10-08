@@ -1,6 +1,5 @@
 import { CoverLetterForm } from "@/components/CoverLetterForm";
 import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
 
 export default function Home() {
   return (
