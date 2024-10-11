@@ -17,7 +17,11 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Textarea } from "./ui/textarea";
-
+import axios from "axios";
+import { useState } from "react";
+import { getMessagesFromStream } from "@/lib/utils";
+import { Separator } from "./ui/separator";
+import { Skeleton } from "./ui/skeleton";
 export const CoverLetterForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -25,41 +29,68 @@ export const CoverLetterForm = () => {
       jobDetailsType: "text",
     },
   });
+  const [generation, setGeneration] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const fileCVRef = form.register("fileCV");
   const jobDetailsFileRef = form.register("jobDetailsFile");
-  const jobDetailsTextRef = form.register("jobDetailsText");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setGeneration("");
+    setLoading(true);
+    const formData = new FormData();
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    formData.append("fileCV", values.fileCV);
+    formData.append("jobDetailsType", values.jobDetailsType);
+    if (values.jobDetailsType === "file") {
+      formData.append("jobDetailsFile", values.jobDetailsFile as Blob);
+    } else {
+      formData.append("jobDetailsText", values.jobDetailsText as string);
+    }
+
+    try {
+      const { data: stream } = await axios.post("/api/cover-letter", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        responseType: "stream",
+      });
+
+      console.log({ stream });
+
+      for await (const chunk of stream) {
+        setGeneration((prev: string) => (prev + chunk) as string);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="fileCV"
-          render={() => (
-            <FormItem>
-              <FormLabel>CV / Resume</FormLabel>
-              <FormControl>
-                <Input type="file" {...fileCVRef} />
-              </FormControl>
-              <FormDescription>
-                This is your CV or Resume as base knowledge.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="jobDetailsType"
-          render={({ field }) => (
-            <FormItem className="space-y-4">
+    <div className="space-y-8">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="fileCV"
+            render={() => (
+              <FormItem>
+                <FormLabel>CV / Resume</FormLabel>
+                <FormControl>
+                  <Input type="file" {...fileCVRef} />
+                </FormControl>
+                <FormDescription>
+                  This is your CV or Resume as base knowledge.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="jobDetailsType"
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Job Detail</FormLabel>
                 <FormControl>
@@ -84,40 +115,80 @@ export const CoverLetterForm = () => {
                 </FormControl>
                 <FormMessage />
               </FormItem>
+            )}
+          />
 
-              {field.value === "file" && (
-                <FormItem>
-                  <FormControl>
-                    <Input type="file" {...jobDetailsFileRef} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <FormItem>
+            {form.watch("jobDetailsType") === "text" && (
+              <FormField
+                control={form.control}
+                name="jobDetailsText"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Tell us about your job"
+                        className="resize-none -mt-4"
+                        rows={5}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-              {field.value === "text" && (
-                <FormItem>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Tell us a little bit about yourself"
-                      // className="resize-none"
-                      {...jobDetailsTextRef}
-                    />
-                  </FormControl>
+            {form.watch("jobDetailsType") === "file" && (
+              <FormField
+                control={form.control}
+                name="jobDetailsFile"
+                render={() => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        {...jobDetailsFileRef}
+                        className="-mt-4"
+                      />
+                    </FormControl>
 
-                  <FormMessage />
-                </FormItem>
-              )}
-              <FormDescription>
-                This is your Job Details information to generate your cover
-                letter.
-              </FormDescription>
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full">
-          Generate
-        </Button>
-      </form>
-    </Form>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormDescription>
+              This is your job details to create your cover letter.
+            </FormDescription>
+          </FormItem>
+
+          <Button disabled={loading} type="submit" className="w-full">
+            {loading ? "Generating..." : "Generate"}
+          </Button>
+        </form>
+      </Form>
+      <div className="space-y-8">
+        {generation && (
+          <>
+            <Separator />
+            <h2 className="text-2xl font-bold">Cover Letter</h2>
+            <p className="whitespace-pre-wrap prose bg-muted rounded-md p-4 ">
+              {getMessagesFromStream(generation)}
+            </p>
+          </>
+        )}
+
+        {loading && (
+          <div className="space-y-4">
+            <Skeleton className="w-1/3 h-6" />
+            <Skeleton className="w-full h-6" />
+            <Skeleton className="w-full h-6" />
+            <Skeleton className="w-full h-6" />
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
