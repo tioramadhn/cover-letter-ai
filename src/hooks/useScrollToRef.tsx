@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useEffect } from "react";
 
-const useScrollToRef = (ref: React.RefObject<HTMLDivElement>, trigger: any) => {
+const useScrollToRef = (ref: React.RefObject<HTMLDivElement>, trigger: []) => {
   useEffect(() => {
     if (ref.current) {
       ref.current.scrollIntoView({ behavior: "smooth" });
