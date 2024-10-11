@@ -19,9 +19,12 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Textarea } from "./ui/textarea";
 import axios from "axios";
 import { useState } from "react";
-import { getMessagesFromStream } from "@/lib/utils";
 import { Separator } from "./ui/separator";
 import { Skeleton } from "./ui/skeleton";
+import { CopyIcon } from "@radix-ui/react-icons";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import { toast } from "sonner";
+
 export const CoverLetterForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -29,7 +32,7 @@ export const CoverLetterForm = () => {
       jobDetailsType: "text",
     },
   });
-  const [generation, setGeneration] = useState<string>("");
+  const [generation, setGeneration] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
 
   const fileCVRef = form.register("fileCV");
@@ -48,18 +51,14 @@ export const CoverLetterForm = () => {
     }
 
     try {
-      const { data: stream } = await axios.post("/api/cover-letter", formData, {
+      const { data } = await axios.post("/api/cover-letter", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        responseType: "stream",
       });
+      console.log(data);
 
-      console.log({ stream });
-
-      for await (const chunk of stream) {
-        setGeneration((prev: string) => (prev + chunk) as string);
-      }
+      setGeneration(() => data?.result);
     } catch (error) {
       console.log(error);
     } finally {
@@ -68,7 +67,7 @@ export const CoverLetterForm = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-8 md:grid md:grid-cols-2 md:gap-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
@@ -92,7 +91,7 @@ export const CoverLetterForm = () => {
             name="jobDetailsType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Job Detail</FormLabel>
+                <FormLabel>Vacancy Detail</FormLabel>
                 <FormControl>
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -127,7 +126,7 @@ export const CoverLetterForm = () => {
                   <FormItem>
                     <FormControl>
                       <Textarea
-                        placeholder="Tell us about your job"
+                        placeholder="Tell us about your vacancy..."
                         className="resize-none -mt-4"
                         rows={5}
                         {...field}
@@ -169,23 +168,44 @@ export const CoverLetterForm = () => {
           </Button>
         </form>
       </Form>
-      <div className="space-y-8">
+      <div className="flex flex-col relative gap-8 md:space-y-0 bg-muted rounded-md p-4 min-h-[409px]">
+        {!generation && !loading && (
+          <div className="flex  h-full justify-center items-center">
+            <p className="text-center text-sm text-muted-foreground">
+              No cover letter generated.
+            </p>
+          </div>
+        )}
         {generation && (
           <>
-            <Separator />
-            <h2 className="text-2xl font-bold">Cover Letter</h2>
-            <p className="whitespace-pre-wrap prose bg-muted rounded-md p-4 ">
-              {getMessagesFromStream(generation)}
-            </p>
+            <CopyToClipboard text={generation} onCopy={() => toast("Copied ")}>
+              <Button
+                className="self-end absolute right-0 top-0 flex gap-2"
+                variant={"outline"}
+                size={"sm"}
+              >
+                <CopyIcon />
+                Copy
+              </Button>
+            </CopyToClipboard>
+            <Separator className="md:hidden" />
+            <p className="whitespace-pre-wrap prose  ">{generation}</p>
           </>
         )}
 
         {loading && (
-          <div className="space-y-4">
-            <Skeleton className="w-1/3 h-6" />
-            <Skeleton className="w-full h-6" />
-            <Skeleton className="w-full h-6" />
-            <Skeleton className="w-full h-6" />
+          <div className="flex flex-col h-full  justify-between">
+            <div className="space-y-6">
+              <Skeleton className="w-1/3 h-8" />
+              <Skeleton className="w-full h-8" />
+              <Skeleton className="w-full h-8" />
+              <Skeleton className="w-full h-8" />
+              <Skeleton className="w-4/5 h-8" />
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="w-1/4 h-8" />
+              <Skeleton className="w-1/3 h-8" />
+            </div>
           </div>
         )}
       </div>

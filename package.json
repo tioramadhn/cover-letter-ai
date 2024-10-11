@@ -2,6 +2,11 @@
   "name": "cover-letter-ai",
   "version": "0.1.0",
   "private": true,
+  "author": {
+    "name": "Tio Ramadhan",
+    "email": "tioramadhan9f@gmail.com",
+    "url": "https://github.com/tioramadhn"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -26,10 +31,13 @@
     "html-react-parser": "^5.1.18",
     "lucide-react": "^0.449.0",
     "next": "14.2.14",
+    "next-themes": "^0.3.0",
     "react": "^18",
+    "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18",
     "react-hook-form": "^7.53.0",
     "react-markdown": "^9.0.1",
+    "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.3",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"
@@ -37,6 +45,7 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
+    "@types/react-copy-to-clipboard": "^5.0.7",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.14",

@@ -10,4 +10,5 @@ Align with Job Description: Use the job details to ensure the cover letter direc
 Maintain Professional Tone: Write in a formal, clear, and concise manner. Keep the letter engaging and easy to read.
 Express Enthusiasm: Show the applicant’s interest in the role and the company, explaining why they are excited about the opportunity and how they align with the company’s goals.
 By following these guidelines, ensure that each cover letter presents the applicant as a strong candidate, making a positive impression on hiring managers.
-`;
+
+Also, fill all the blank with the applicant's name and job title.`;
